@@ -2,14 +2,19 @@ package controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
 import org.json.simple.JSONObject;
+
 import misc.Parse;
 import model.SupplierBean;
 import model.SupplierService;
@@ -29,7 +34,9 @@ public class SupplierServlet extends HttpServlet {
 	}
 
 	protected void doGet(HttpServletRequest req, HttpServletResponse rsp) throws ServletException, IOException {
-
+		
+//		rsp.setContentType("text/html; charset=UTF-8");
+		
 		// System.out.println("get");
 
 		// 接收資料
@@ -42,6 +49,7 @@ public class SupplierServlet extends HttpServlet {
 		// System.out.println(action);
 
 		JSONObject jObj = new JSONObject();
+		
 		PrintWriter out = rsp.getWriter();
 
 		// StringBuilder sb = new StringBuilder();
@@ -78,7 +86,6 @@ public class SupplierServlet extends HttpServlet {
 					return;
 				}
 			}
-
 		}
 	}
 	// select by name
@@ -116,35 +123,33 @@ public class SupplierServlet extends HttpServlet {
 		// 驗證資料
 		JSONObject jObj = new JSONObject();
 		PrintWriter out = rsp.getWriter();
-
+		List<String> errors = new ArrayList<String>();
+		Map<String,Object> results = new HashMap<String,Object>();
+		
+		
+		
 		if (action != null) {
 			if (action.equals("insert") || action.equals("update")) {
 				if (name == null || name.length() == 0) {
-					jObj.put("supplierName", "新增或修改時公司名稱為必填欄位，請輸入");
-					out.print(jObj);
+					errors.add("新增或修改時公司名稱為必填欄位，請輸入");
 				}
 				if (contact == null || contact.length() == 0) {
-					jObj.put("supplierContact", "新增或修改時聯絡人姓名為必填欄位，請輸入");
-					out.print(jObj);
+					errors.add("新增或修改時聯絡人姓名為必填欄位，請輸入");
 				}
 				if (tel == null || tel.length() == 0) {
-					jObj.put("supplierTel", "新增或修改時電話為必填欄位，請輸入");
-					out.print(jObj);
+					errors.add("新增或修改時電話為必填欄位，請輸入");
 				}
 				if (tel != null && tel.length() != 0) {
 					if (!tel.matches("\\+?\\d{1,4}-?(\\d{4,15})(#\\d{1,5}){0,1}")) {
-						jObj.put("supplierTel", "輸入資料錯誤，電話號碼不能有中文和英文");
-						out.print(jObj);
+						errors.add("輸入資料錯誤，電話號碼不能有中文和英文");
 					} 
 				}
 
 				if (addr == null || addr.length() == 0) {
-					jObj.put("supplierAddr", "新增或修改時地址為必填欄位，請輸入");
-					out.print(jObj);
+					errors.add("新增或修改時地址為必填欄位，請輸入");
 				}
 				if (date == null || date.length() == 0) {
-					jObj.put("supplierDate", "新增或修改時首次交易日為必填欄位，請輸入");
-					out.print(jObj);
+					errors.add("新增或修改時首次交易日為必填欄位，請輸入");
 				}
 			}
 		}
@@ -156,8 +161,7 @@ public class SupplierServlet extends HttpServlet {
 		{
 			firstDate = Parse.convertDate(date);
 			if (new java.util.Date(0).equals(firstDate)) {
-				jObj.put("supplierDate", "日期格式必須如範例:2015-01-01 (西元年4碼-月2碼-日2碼)");
-				out.print(jObj);
+				errors.add("日期格式必須如範例:2015-01-01 (西元年4碼-月2碼-日2碼)");
 			}
 		}
 
@@ -169,8 +173,10 @@ public class SupplierServlet extends HttpServlet {
 		}
 
 		// System.out.println(jObj);
-		if (jObj != null && !jObj.isEmpty()) {
-			req.getRequestDispatcher("/AlexHo/supplierTest.jsp").forward(req, rsp);
+		if (errors != null && !errors.isEmpty()) {
+			results.put("errors", errors);
+			jObj.put("results", results);
+			out.print(jObj);
 			return;
 		}
 
@@ -195,12 +201,10 @@ public class SupplierServlet extends HttpServlet {
 		{
 			int result = service.insert(bean);
 			if (result == 0) {
-				jObj.put("result", "新增失敗");
-				out.print(jObj);
+				results.put("state", "新增失敗");
 			} else {
 				req.setAttribute("insert", result);
-				jObj.put("result", "新增" + result + "筆成功");
-				out.print(jObj);
+				results.put("state", "新增" + result + "筆成功");
 			}
 
 		} else if (action != null && action.equals("update"))
@@ -208,12 +212,10 @@ public class SupplierServlet extends HttpServlet {
 		{
 			int result = service.update(bean);
 			if (result == 0) {
-				jObj.put("result", "修改失敗");
-				out.print(jObj);
+				results.put("state", "修改失敗");
 			} else {
 				req.setAttribute("update", result);
-				jObj.put("result", "修改1筆成功");
-				out.print(jObj);
+				results.put("state", "修改1筆成功");
 			}
 
 			// System.out.println(action + "完成");
@@ -223,16 +225,17 @@ public class SupplierServlet extends HttpServlet {
 			int result = service.delete(bean);
 			// System.out.println(result);
 			if (result == 0) {
-				jObj.put("result", "刪除失敗");
-				out.print(jObj);
+				results.put("state", "刪除失敗");
 			} else {
 				req.setAttribute("delete", result);
-				jObj.put("result", "刪除" + result + "筆成功");
-				out.print(jObj);
+				results.put("state", "刪除" + result + "筆成功");
 			}
 		} else {
-			jObj.put("result", "不知道您現在要" + action + "什麼");
-			out.print(jObj);
+			results.put("state", "不知道您現在要" + action + "什麼");
 		}
+
+		jObj.put("results", results);
+		out.print(jObj);
+		return;
 	}
 }
