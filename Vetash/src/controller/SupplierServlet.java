@@ -228,7 +228,7 @@ public class SupplierServlet extends HttpServlet {
 			req.getRequestDispatcher("/AlexHo/supplierTest.jsp").forward(req, rsp);
 		} else
 
-		{
+		{ 
 			errs.put("result", "不知道您現在要" + action + "什麼");
 			req.getRequestDispatcher("/AlexHo/supplierTest.jsp").forward(req, rsp);
 		}
