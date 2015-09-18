@@ -2,7 +2,6 @@ package controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.ServletException;
@@ -115,36 +114,37 @@ public class SupplierServlet extends HttpServlet {
 		// System.out.println(action);
 
 		// 驗證資料
-		Map<String, String> errs = new HashMap<String, String>();
-		req.setAttribute("errMsg", errs);
+		JSONObject jObj = new JSONObject();
+		PrintWriter out = rsp.getWriter();
 
 		if (action != null) {
 			if (action.equals("insert") || action.equals("update")) {
 				if (name == null || name.length() == 0) {
-					errs.put("supplierName", "新增或修改時公司名稱為必填欄位，請輸入");
+					jObj.put("supplierName", "新增或修改時公司名稱為必填欄位，請輸入");
+					out.print(jObj);
 				}
 				if (contact == null || contact.length() == 0) {
-					errs.put("supplierContact", "新增或修改時聯絡人姓名為必填欄位，請輸入");
+					jObj.put("supplierContact", "新增或修改時聯絡人姓名為必填欄位，請輸入");
+					out.print(jObj);
 				}
 				if (tel == null || tel.length() == 0) {
-					errs.put("supplierTel", "新增或修改時電話為必填欄位，請輸入");
+					jObj.put("supplierTel", "新增或修改時電話為必填欄位，請輸入");
+					out.print(jObj);
 				}
 				if (tel != null && tel.length() != 0) {
 					if (!tel.matches("\\+?\\d{1,4}-?(\\d{4,15})(#\\d{1,5}){0,1}")) {
-						errs.put("supplierTel", "輸入格式錯誤");
+						jObj.put("supplierTel", "輸入資料錯誤，電話號碼不能有中文和英文");
+						out.print(jObj);
 					}
 				}
 
 				if (addr == null || addr.length() == 0) {
-					errs.put("supplierAddr", "新增或修改時地址為必填欄位，請輸入");
+					jObj.put("supplierAddr", "新增或修改時地址為必填欄位，請輸入");
+					out.print(jObj);
 				}
 				if (date == null || date.length() == 0) {
-					errs.put("supplierDate", "新增或修改時首次交易日為必填欄位，請輸入");
-				}
-			}
-			if (action.equals("Delete")) {
-				if (date == null || date.length() == 0) {
-					errs.put("supplierTel", "刪除時電話為必填欄位，請輸入");
+					jObj.put("supplierDate", "新增或修改時首次交易日為必填欄位，請輸入");
+					out.print(jObj);
 				}
 			}
 		}
@@ -156,7 +156,8 @@ public class SupplierServlet extends HttpServlet {
 		{
 			firstDate = Parse.convertDate(date);
 			if (new java.util.Date(0).equals(firstDate)) {
-				errs.put("supplierDate", "日期格式必須如範例:2015-01-01 (西元年4碼-月2碼-日2碼)");
+				jObj.put("supplierDate", "日期格式必須如範例:2015-01-01 (西元年4碼-月2碼-日2碼)");
+				out.print(jObj);
 			}
 		}
 
@@ -167,10 +168,8 @@ public class SupplierServlet extends HttpServlet {
 			parseId = Parse.convertInt(id);
 		}
 
-		// System.out.println(errs);
-		if (errs != null && !errs.isEmpty())
-
-		{
+		// System.out.println(jObj);
+		if (jObj != null && !jObj.isEmpty()) {
 			req.getRequestDispatcher("/AlexHo/supplierTest.jsp").forward(req, rsp);
 			return;
 		}
@@ -196,23 +195,27 @@ public class SupplierServlet extends HttpServlet {
 		{
 			int result = service.insert(bean);
 			if (result == 0) {
-				errs.put("result", "新增失敗");
+				jObj.put("result", "新增失敗");
+				out.print(jObj);
 			} else {
 				req.setAttribute("insert", result);
-				errs.put("result", "新增" + result + "筆成功");
+				jObj.put("result", "新增" + result + "筆成功");
+				out.print(jObj);
 			}
-			req.getRequestDispatcher("/AlexHo/supplierTest.jsp").forward(req, rsp);
+
 		} else if (action != null && action.equals("update"))
 
 		{
 			int result = service.update(bean);
 			if (result == 0) {
-				errs.put("result", "修改失敗");
+				jObj.put("result", "修改失敗");
+				out.print(jObj);
 			} else {
 				req.setAttribute("update", result);
-				errs.put("result", "修改1筆成功");
+				jObj.put("result", "修改1筆成功");
+				out.print(jObj);
 			}
-			req.getRequestDispatcher("/AlexHo/supplierTest.jsp").forward(req, rsp);
+
 			// System.out.println(action + "完成");
 		} else if (action != null && action.equals("delete"))
 
@@ -220,17 +223,16 @@ public class SupplierServlet extends HttpServlet {
 			int result = service.delete(bean);
 			// System.out.println(result);
 			if (result == 0) {
-				errs.put("result", "刪除失敗");
+				jObj.put("result", "刪除失敗");
+				out.print(jObj);
 			} else {
 				req.setAttribute("delete", result);
-				errs.put("result", "刪除" + result + "筆成功");
+				jObj.put("result", "刪除" + result + "筆成功");
+				out.print(jObj);
 			}
-			req.getRequestDispatcher("/AlexHo/supplierTest.jsp").forward(req, rsp);
-		} else
-
-		{ 
-			errs.put("result", "不知道您現在要" + action + "什麼");
-			req.getRequestDispatcher("/AlexHo/supplierTest.jsp").forward(req, rsp);
+		} else {
+			jObj.put("result", "不知道您現在要" + action + "什麼");
+			out.print(jObj);
 		}
 	}
 }
