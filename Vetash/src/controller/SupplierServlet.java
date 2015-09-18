@@ -135,7 +135,7 @@ public class SupplierServlet extends HttpServlet {
 					if (!tel.matches("\\+?\\d{1,4}-?(\\d{4,15})(#\\d{1,5}){0,1}")) {
 						jObj.put("supplierTel", "輸入資料錯誤，電話號碼不能有中文和英文");
 						out.print(jObj);
-					}
+					} 
 				}
 
 				if (addr == null || addr.length() == 0) {
